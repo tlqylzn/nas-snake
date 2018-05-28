@@ -143,7 +143,7 @@ export default {
       dialogRankingInfoVisible: false,
       rankingList: [],  // 排行榜数据
       nickName: '', // 玩家昵称
-      userAddress: 'n1cz1GweGxt4r5FBRSQuvNCg3WrzGycKPLd', // 玩家地址
+      userAddress: localStorage.getItem('userAddress') ? localStorage.getItem('userAddress') : 'n1cz1GweGxt4r5FBRSQuvNCg3WrzGycKPLd', // 玩家地址
       blockchainScore: 0,
       currUserScore: {}
     }
@@ -497,6 +497,8 @@ export default {
             console.log("判断数据提交到区块链的状态", receipt)
             if (receipt.from) {
               this.userAddress = receipt.from;
+              // 存在localStorage
+              localStorage.setItem('userAddress', receipt.from);
             }
             // console.log(receipt)
             if (receipt["status"] === 2) {
