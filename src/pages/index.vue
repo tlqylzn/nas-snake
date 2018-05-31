@@ -383,6 +383,16 @@ export default {
         })
 
     },
+    showLoading() {
+      this.loading = this.$loading({
+        lock: true,
+        text: '上链中... 请稍后查看',
+        background: 'rgba(0, 0, 0, 0.8)'
+      });
+      setTimeout(() => {
+        loading.close();
+      }, 300000);
+    },
     toRanking () {
       // 上链
       console.log('上链 score', this.getScoreCount);
@@ -401,6 +411,7 @@ export default {
           type: 'warning'
         });
       } else {
+        this.showLoading();
 
         // 链上保存分数
         var nebPay = new NebPay()
@@ -492,6 +503,24 @@ export default {
     },
     callbackResult (response) {
       console.log("responseonse of push: " + JSON.stringify(response))
+
+      if (JSON.stringify(response) === '"Error: Transaction rejected by user"') {
+
+        if (this.loading) {
+          this.loading.close();
+        }
+
+        this.init();
+
+        this.$notify({
+          title: '提示',
+          message: '上链已被您拒绝，请重新开始',
+          type: 'error'
+        });
+
+        return;
+      }
+
       var intervalQuery = setInterval(() => {
         api.getTransactionReceipt({hash: response["txhash"]}).then((receipt) => {
             console.log("判断数据提交到区块链的状态", receipt)
@@ -504,6 +533,11 @@ export default {
             if (receipt["status"] === 2) {
                 console.log("pending.....")
             } else if (receipt["status"] === 1){
+
+                if (this.loading) {
+                  this.loading.close();
+                }
+
                 this.$notify({
                   title: '上链成功',
                   message: '赶快点击排行榜查看排名吧',
@@ -513,6 +547,19 @@ export default {
                 clearInterval(intervalQuery)
             }else {
                 console.log("交易失败......")
+                if (this.loading) {
+                  this.loading.close();
+                }
+
+                this.init();
+
+                this.$notify({
+                  title: '上链失败',
+                  message: '请重新再试',
+                  type: 'warning'
+                });
+
+
                 //清除定时器
                 clearInterval(intervalQuery)
             }
